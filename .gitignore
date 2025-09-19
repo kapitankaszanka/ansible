@@ -1,0 +1,47 @@
+# Ansible
+*.retry
+.retry/
+.retry_files/
+.inventory
+vault_password_file
+*.vault_pass
+
+# Molecule / testy
+.molecule/
+.cache/
+.pytest_cache/
+__pycache__/
+tests/__pycache__/
+
+# Python venv / narzędzia
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+
+# Edytory/IDE
+.vscode/
+.idea/
+
+# System / OS junk
+.DS_Store
+Thumbs.db
+
+# Logi / pliki tymczasowe
+*.log
+*.tmp
+tmp/
+*.swp
+*.swo
+
+# Build artefacts / cache ogólne
+dist/
+build/
+node_modules/
+
+# Lokalne sekretne pliki (przykłady – dostosuj do swoich potrzeb)
+secrets/
+*.env
+.env.*
+# Uwaga: nie ignoruj szyfrowanych plików z Ansible Vault, jeśli są częścią repo!
+# Ignoruj za to lokalny plik z hasłem do Vaulta (vault_password_file) – nie commituj go.
