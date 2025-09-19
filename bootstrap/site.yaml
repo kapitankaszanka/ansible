@@ -1,0 +1,8 @@
+- name: Bootstrap all Linux machines
+  hosts: all
+  become: true
+  roles:
+    - role: common_bootstrap
+    - role: packages_installation
+    - role: services_configuration
+    - role: customization

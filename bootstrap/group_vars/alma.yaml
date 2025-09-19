@@ -1,0 +1,10 @@
+packages_list_installed:
+  -  vim
+  -  ncdu
+  -  lsof
+  -  git
+  -  htop
+  -  curl
+  -  man-db
+  -  bash-completion
+  -  tree

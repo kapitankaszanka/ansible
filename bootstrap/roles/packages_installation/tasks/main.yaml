@@ -1,0 +1,37 @@
+- block:
+  - name: Ensure base packages are installed (Debian)
+    when:
+      - ansible_os_family == "Debian"
+      - packages_list_installed | length > 0
+    ansible.builtin.apt:
+      name: "{{ packages_list_installed }}"
+      state: present
+    tags:
+      - package
+
+  - block:
+      - name: Install packages (RedHat)
+        when:
+          - ansible_os_family == "RedHat"
+          - packages_list_installed | length > 0
+        ansible.builtin.dnf:
+          name: "{{ packages_list_installed }}"
+          state: present
+    rescue:
+      - name: Ensure EPEL repo is installed
+        when:
+          - ansible_os_family == "RedHat"
+          - packages_list_installed | length > 0
+        ansible.builtin.dnf:
+          name: epel-release
+          state: present
+      - name: Retry package installation (RedHat)
+        when:
+          - ansible_os_family == "RedHat"
+          - packages_list_installed | length > 0
+        ansible.builtin.dnf:
+          name: "{{ packages_list_installed }}"
+          state: present
+  when:
+    - packages_list_installed is defined
+    - packages_list_installed is not none

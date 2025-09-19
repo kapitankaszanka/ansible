@@ -1,0 +1,12 @@
+packages_list_installed:
+  -  vim-gtk3
+  -  ncdu
+  -  lsof
+  -  git
+  -  htop
+  -  curl
+  -  man-db
+  -  bash-completion
+  -  tree
+  -  apt-listchanges
+  -  apt-transport-https

@@ -1,0 +1,86 @@
+- name: Update cache (Debian)
+  when: ansible_os_family == "Debian"
+  ansible.builtin.apt:
+    update_cache: true
+  changed_when: false
+  tags:
+    - bootstrap
+    - cache
+
+- name: Update cache (RedHat)
+  when: ansible_os_family == "RedHat"
+  ansible.builtin.dnf:
+    update_cache: true
+  changed_when: false
+  tags:
+    - bootstrap
+    - cache
+
+- name: Ensure sudo is installed (Debian)
+  when: ansible_os_family == "Debian"
+  ansible.builtin.apt:
+    name: sudo
+    state: present
+  tags:
+    - bootstrap
+    - sudo
+
+- name: Ensure sudo is installed (RedHat)
+  when: ansible_os_family == "RedHat"
+  ansible.builtin.dnf:
+    name: sudo
+    state: present
+  tags:
+    - bootstrap
+    - sudo
+
+- block:
+  - name: Ensure bootstrap user exists
+    ansible.builtin.user:
+      name: "{{ automation_user }}"
+      create_home: true
+      shell: /bin/bash
+      append: true
+      groups: "{{ superuser_group }}"
+    tags:
+      - bootstrap
+      - user
+
+  - name: SSH key for bootstrap user
+    ansible.posix.authorized_key:
+      user: "{{ automation_user }}"
+      state: present
+      key: "{{ automation_ssh_pub_key }}"
+    tags:
+      - bootstrap
+      - user
+
+  - name: Ensure /etc/sudoers.d exists
+    ansible.builtin.file:
+      path: /etc/sudoers.d
+      state: directory
+      owner: root
+      group: root
+      mode: "0750"
+    tags:
+      - bootstrap
+      - sudo
+
+  - name: Passwordless sudo for created user (validated)
+    ansible.builtin.copy:
+      dest: "/etc/sudoers.d/100-{{ automation_user }}"
+      content: |
+        # Ansible passwordless sudo
+        {{ automation_user }} ALL=(ALL) NOPASSWD:ALL
+      owner: root
+      group: root
+      mode: "0440"
+      validate: '/usr/sbin/visudo -cf %s'
+    tags:
+      - bootstrap
+      - sudo
+  when:
+    - automation_user is defined
+    - automation_user is not none
+    - automation_ssh_pub_key is defined
+    - automation_ssh_pub_key is not none

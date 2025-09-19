@@ -1,0 +1,112 @@
+- block:
+  - name: Fail if unsupported OS family
+    when: ansible_os_family not in ['Debian','RedHat']
+    ansible.builtin.fail:
+      msg: "This role supports Debian and RedHat families, got {{ ansible_os_family }}"
+
+  - name: Install systemd-resolved/chronyd
+    when: ansible_os_family == "Debian"
+    ansible.builtin.apt:
+      name:
+        - systemd-resolved
+        - chrony
+      state: present
+    tags:
+      - dns
+      - ntp
+      
+  - name: Install chronyd
+    when: 
+      - ansible_os_family == "RedHat"
+    ansible.builtin.dnf:
+      name: chrony
+      state: present
+    tags:
+      - dns
+      - ntp
+
+  - name: Ensure systemd-resolved is enabled and running
+    when: 
+      - ansible_os_family == "Debian"
+    ansible.builtin.service:
+      name: systemd-resolved
+      state: started
+      enabled: true
+    tags:
+      - resolved
+      - dns
+
+  - name: Create resolved.d directory
+    when: 
+      - ansible_os_family == "Debian"
+    ansible.builtin.file:
+      dest: /etc/systemd/resolved.conf.d
+      state: directory
+      owner: root
+      group: root
+      mode: "0755"
+    tags:
+      - resolved
+      - dns
+
+  - name: Configure systemd-resolved
+    when: 
+      - ansible_os_family == "Debian"
+    ansible.builtin.template:
+      src: systemd-resolved.conf.j2
+      dest: "{{ resolved_dropin }}"
+      owner: root
+      group: root
+      mode: "0644"
+    notify: Restart systemd-resolved
+    tags:
+      - resolved
+      - dns
+
+  - name: Ensure chrony is enabled and running
+    ansible.builtin.service:
+      name: chronyd
+      state: started
+      enabled: true
+    tags:
+      - ntp
+      - chrony
+
+  - name: Create resolved.d directory
+    ansible.builtin.file:
+      dest: "{{ item }}"
+      state: directory
+      owner: root
+      group: root
+      mode: "0755"
+    loop:
+      - /etc/chrony/conf.d/
+      - /etc/chrony/sources.d/
+    tags:
+      - ntp
+      - chrony
+
+  - name: Configure chronyd
+    ansible.builtin.template:
+      src: chrony.conf.j2 
+      dest: "{{ chrony_dropin }}"
+      owner: root
+      group: root
+      mode: "0644"
+    notify: Restart chronyd
+    tags:
+      - ntp
+      - chrony
+
+  - name: Configure chronyd
+    ansible.builtin.template:
+      src: chrony-sources.sources.j2 
+      dest: "{{ chrony_sources_dropin }}"
+      owner: root
+      group: root
+      mode: "0644"
+    notify: Restart chronyd
+    tags:
+      - ntp
+      - chrony
+  when: not_container | bool

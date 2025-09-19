@@ -1,0 +1,11 @@
+# DNS
+resolved_dropin: /etc/systemd/resolved.conf.d/1000-ansible-resolved.conf
+
+# Chrony
+chrony_conf_file: /etc/chrony/conf.d
+chrony_sources_file: /etc/chrony/sources.d
+chrony_dropin: "{{ '/etc/chrony.conf' if ansible_os_family == 'RedHat' else '/etc/chrony/chrony.conf' }}"
+chrony_sources_dropin: "{{ chrony_sources_file }}/ansible-generated.sources"
+
+# Else
+not_container: "{{ ansible_virtualization_type not in ['docker','lxc','podman','container'] }}"

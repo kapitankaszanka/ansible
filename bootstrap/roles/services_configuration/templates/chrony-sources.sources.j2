@@ -1,0 +1,11 @@
+# Ansible gerenated sources
+
+# Preferd servers
+{% for item in ntp_servers -%}
+server {{ item }} iburst prefer 
+{% endfor %}
+
+# Custom fallback servers
+{% for item in ntp_fallback_servers -%}
+pool {{ item }} iburst maxsources 2
+{% endfor %}
