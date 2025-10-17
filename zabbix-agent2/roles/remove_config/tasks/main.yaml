@@ -1,0 +1,54 @@
+- block:
+  - name: Remove zabbix-agent2
+    ignore_errors: true
+    ansible.builtin.apt:
+      name: zabbix-agent2
+      state: absent
+  - name: Remove zabbix repository
+    ignore_errors: true
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: absent
+    loop:
+      - /etc/apt/trusted.gpg.d/zabbix-official-repo-apr2024.gpg
+      - /etc/apt/sources.list.d/zabbix.list
+  when: 
+    - ansible_os_family == "Debian"
+
+- block:
+  - name: Remove zabbix-agent2
+    ignore_errors: true
+    ansible.builtin.dnf:
+      name: zabbix-agent2
+      state: absent
+  - name: Remove zabbix repository
+    ignore_errors: true
+    ansible.builtin.find:
+      paths: /etc/pki/rpm-gpg
+      patterns: '(?i).*ZABBIX.*'
+      use_regex: true
+      file_type: file
+    register: zabbix_files
+  - name: Debug files
+    ansible.builtin.debug:
+      msg: "{{ item.path }}"
+    loop: "{{ zabbix_files.files }}"
+  - name: Delete matched files
+    ignore_errors: true
+    ansible.builtin.file:
+      path: "{{ item.path }}"
+      state: absent
+    loop: "{{ zabbix_files.files }}"
+  - name: Delete matched files
+    ignore_errors: true
+    ansible.builtin.file:
+      path: /etc/yum.repo.d/zabbix.repo
+      state: absent
+  when: 
+    - ansible_os_family == "RedHat"
+
+- name: Delete zabbix folder
+  ignore_errors: true
+  ansible.builtin.file:
+    path: /etc/zabbix
+    state: absent

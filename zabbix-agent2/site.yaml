@@ -1,0 +1,8 @@
+---
+- name: Install zabbix-agent2 on all machines.
+  hosts: all
+  become: true
+  roles:
+#    - role: install_zabbix-agent2
+    - role: remove_config
+

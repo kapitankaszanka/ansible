@@ -1,0 +1,79 @@
+- name: Check supported family
+  when: ansible_distribution not in supported_distros
+  ansible.builtin.fail:
+    msg: "This role supports {{ supported_distros | join(', ') }} families, got {{ ansible_os_family }}"
+
+- name: Debian based distros
+  block:
+    - name: Add repo
+      block:
+        - name: Install gpg utils
+          ansible.builtin.apt:
+            name: gpg
+            state: present
+        - name: Add zabbix repository gpg key for APT distro
+          ansible.builtin.get_url:
+            url: "{{ debian_repository_key }}"
+            dest: /etc/apt/trusted.gpg.d/
+            owner: root
+            group: root
+            mode: "0644"
+        - name: Add zabbix repository for APT distro
+          ansible.builtin.apt_repository:
+            repo: "{{ debian_repository }}"
+            filename: zabbix
+            state: present
+      when:
+        - zabbix_version > 7.0
+    - name: Install zabbix-agent2
+      ansible.builtin.apt:
+        name: zabbix-agent2
+        state: present
+  when: 
+    - ansible_os_family == "Debian"
+
+- name: RedHat based distros
+  block:
+    - name: Exclude Zabbix package from EPEL repo
+      ansible.builtin.ini_file:
+        path: /etc/yum.repos.d/epel.repo
+        section: epel
+        option: excludepkgs
+        value: zabbix*
+        state: present
+        backup: yes
+    - name: Add zabbix key
+      ansible.builtin.get_url:
+        url: "{{ redhat_repository_key }}"
+        dest: "/etc/pki/rpm-gpg/{{ redhat_repository_key_name }}"
+        owner: root
+        group: root
+        mode: "0644"
+    - name: Add zabbix repository
+      ansible.builtin.yum_repository:
+        name: zabbix
+        description: Zabbix Official Repository - $basearch
+        baseurl: https://repo.zabbix.com/zabbix/7.0/{{ redhat_distribution }}/{{ ansible_distribution_major_version }}/x86_64
+        enabled: true
+        gpgcheck: true
+        gpgkey: file:///etc/pki/rpm-gpg/{{ redhat_repository_key_name }}
+    - name:
+      ansible.builtin.dnf:
+        name: zabbix-agent2
+        state: present
+  when:
+    - ansible_os_family == "RedHat"
+
+- name: Enable zabbix-agent2 service
+  ansible.builtin.service:
+    name: zabbix-agent2
+    enabled: true
+
+- name: Configure zabbix-agent2
+  ansible.builtin.template:
+    src: zabbix_agent2.conf.j2
+    dest: /etc/zabbix/zabbix_agent2.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart zabbix-agent2
