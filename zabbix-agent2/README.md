@@ -1,22 +1,22 @@
-# Zabbix-agent2 instalation
+# Zabbix Agent 2 Installation
 
-Playbook install and configure zabbix-agent2 on linux machines.
+This playbook installs and configures Zabbix Agent 2 on Linux machines.
 
-## What this does
+## What it does
 
 Typical tasks include:
-- Installing zabbix-agent2.
-- Configuring zabbix-agent2.
+- Installing Zabbix-agent2.
+- Configuring Zabbix-agent2.
 
-Optionaly:
-- Remove zabbix-agent2 from machine.
+Optional:
+- Removing Zabbix-agent2 from the machine.
 
-## What to added
+## What will be added.
 
-- TLS certificates for machines authorization.
-- Adding hosts to zabbix-server.
+- TLS certificates for machine authorization.
+- Adding hosts to the Zabbix-server.
 
 ## Prerequisites
 
-- **Ansible** (recommended: 2.15+)
-- SSH access to the target host(s) or running locally
+- **Ansible** (recommended: 2.15+).
+- SSH access to the target host(s) or running locally.
