@@ -2,6 +2,7 @@
   when: ansible_os_family == "Debian"
   ansible.builtin.apt:
     update_cache: true
+    upgrade: full
   changed_when: false
   tags:
     - bootstrap
@@ -10,6 +11,7 @@
 - name: Update cache (RedHat)
   when: ansible_os_family == "RedHat"
   ansible.builtin.dnf:
+    name: "*"
     update_cache: true
   changed_when: false
   tags:
@@ -54,6 +56,9 @@
     tags:
       - bootstrap
       - user
+    when:
+      - automation_ssh_pub_key is defined
+      - automation_ssh_pub_key is not none
 
   - name: Ensure /etc/sudoers.d exists
     ansible.builtin.file:
@@ -82,5 +87,3 @@
   when:
     - automation_user is defined
     - automation_user is not none
-    - automation_ssh_pub_key is defined
-    - automation_ssh_pub_key is not none
