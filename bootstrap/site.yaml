@@ -6,3 +6,4 @@
     - role: packages_installation
     - role: services_configuration
     - role: customization
+    - role: upgrade_all_packages

@@ -1,0 +1,17 @@
+- name: Update cache (Debian)
+  when: ansible_os_family == "Debian"
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: full
+  changed_when: false
+  tags:
+    - upgrade
+
+- name: Update cache (RedHat)
+  when: ansible_os_family == "RedHat"
+  ansible.builtin.dnf:
+    update_cache: true
+    state: latest
+  changed_when: false
+  tags:
+    - upgrade
