@@ -22,7 +22,7 @@
       - admin_ssh_pub_key is defined
       - admin_ssh_pub_key is not none
 
-  - name: Bashrc and vimrc files (User)
+  - name: Bashrc and vimrc files (Custom User)
     ansible.builtin.copy:
       dest: "/home/{{ admin_user }}/.{{ item }}"
       src: "{{ item }}"
@@ -35,7 +35,7 @@
     tags:
       - customization
 
-  - name: Bashrc and vimrc files (Root)
+  - name: Bashrc and vimrc files (Root user)
     ansible.builtin.copy:
       dest: "/root/.{{ item }}"
       src: "{{ item }}"

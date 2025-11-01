@@ -23,6 +23,7 @@ if [ -x /usr/bin/dircolors ]; then
   test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
 fi
 alias ls='ls --color=auto'
+alias ll='ls -lh'
 alias lla='ls -lah'
 alias grep='grep --color=auto'
 alias ip='ip --color=auto'
