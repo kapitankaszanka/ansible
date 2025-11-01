@@ -1,19 +1,21 @@
 ## A user who will be created for the needs of Ansible
 automation_user: "ansible"
 ## Uncomment and add ssh key
-# automation_ssh_pub_key: ""
+automation_ssh_pub_key: ""
 
 ## A user who will be created for administration purpose.
 admin_user: ""
 ## Uncomment and add ssh key
-# admin_ssh_pub_key: ""
+admin_ssh_pub_key: ""
 
+# dns servers that will be setup
 dns_servers:
   - 8.8.8.8
   - 1.1.1.1
 domains_name:
   - ansible.lab
 
+# ntpdns servers that will be setup
 ntp_servers:
   - 192.168.1.254
 ntp_fallback_servers:
