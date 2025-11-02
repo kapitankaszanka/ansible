@@ -53,7 +53,7 @@
       ansible.builtin.yum_repository:
         name: zabbix
         description: Zabbix Official Repository - $basearch
-        baseurl: https://repo.zabbix.com/zabbix/7.0/{{ redhat_distribution }}/{{ ansible_distribution_major_version }}/x86_64
+        baseurl: https://repo.zabbix.com/zabbix/{{ zabbix_version }}/{{ redhat_distribution }}/{{ ansible_distribution_major_version }}/x86_64
         enabled: true
         gpgcheck: true
         gpgkey: file:///etc/pki/rpm-gpg/{{ redhat_repository_key_name }}
