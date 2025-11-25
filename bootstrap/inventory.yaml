@@ -2,21 +2,25 @@
 all:
   vars:
     ansible_user: ansible
+  hosts:
+    alma01.lab:
+      ansible_host: 192.168.1.3
+    debian01.lab:
+      ansible_host: 192.168.1.1
+    ubuntu01.lab:
+      ansible_host: 192.168.1.2
 
 debian:
   hosts:
     debian01.lab:
-      ansible_host: 192.168.1.1
 
 ubuntu:
   hosts:
     ubuntu01.lab:
-      ansible_host: 192.168.1.2
 
 almalinux:
   hosts:
     alma01.lab:
-      ansible_host: 192.168.1.3
 
 debian_like:
   children:
