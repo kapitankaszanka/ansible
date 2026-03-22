@@ -1,5 +1,6 @@
 packages_list_installed:
   - vim-gtk3
+  - tmux
   - ncdu
   - lsof
   - git

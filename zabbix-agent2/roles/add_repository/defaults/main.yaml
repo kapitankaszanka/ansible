@@ -4,13 +4,15 @@ supported_distros:
   - "RedHat"
   - "AlmaLinux"
 
+# debian
 debian_repository_key: >-
   https://repo.zabbix.com/zabbix-official-repo-apr2024.gpg 
 debian_repository: >-
   deb https://repo.zabbix.com/zabbix/{{ zabbix_version }}/stable/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main
 
+# redhat
 redhat_repository_key_name: >-
-  {{ "RPM-GPG-KEY-ZABBIX-08EFA7DD" if ansible_distribution_major_version == "10" else "RPM-GPG-KEY-ZABBIX-B5333005" if ansible_distribution_major_version == "9" }}
+  {{ "RPM-GPG-KEY-ZABBIX-B5333005" if ansible_distribution_major_version == "10" else "RPM-GPG-KEY-ZABBIX-B5333005" if ansible_distribution_major_version == "9" }}
 redhat_repository_key: >-
     https://repo.zabbix.com/{{ redhat_repository_key_name }}
 redhat_distribution: >-

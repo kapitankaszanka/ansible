@@ -3,7 +3,6 @@
   become: true
   roles:
     - role: common_bootstrap
-    - role: packages_installation
     - role: services_configuration
+    - role: packages_installation
     - role: customization
-    - role: upgrade_all_packages

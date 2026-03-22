@@ -8,7 +8,7 @@
     when: ansible_os_family == "Debian"
     ansible.builtin.apt:
       name:
-        - systemd-resolved
+#        - systemd-resolved
         - chrony
       state: present
     tags:

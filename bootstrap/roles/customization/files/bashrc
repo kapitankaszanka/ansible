@@ -86,4 +86,3 @@ fi
 ### --- Modes & local overrides ---
 set -o vi
 [ -f ~/.bashrc.local ] && . ~/.bashrc.local
-

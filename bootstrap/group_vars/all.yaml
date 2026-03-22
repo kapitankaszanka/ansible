@@ -4,20 +4,20 @@ automation_user: "ansible"
 automation_ssh_pub_key: ""
 
 ## A user who will be created for administration purpose.
-admin_user: ""
+admin_user: "admin"
 ## Uncomment and add ssh key
 admin_ssh_pub_key: ""
 
-# dns servers that will be setup
 dns_servers:
   - 8.8.8.8
   - 1.1.1.1
 domains_name:
-  - ansible.lab
+  - example.com
+resolved_dnssec: no
 
-# ntpdns servers that will be setup
 ntp_servers:
-  - 192.168.1.254
+  -  ntp1.example.com
 ntp_fallback_servers:
-  - tempus1.gum.gov.pl
-  - tempus2.gum.gov.pl
+  -  fallback-ntp1.example.com
+  -  fallback-ntp2.example.com
+

@@ -1,17 +1,18 @@
-- name: Update cache (Debian)
-  when: ansible_os_family == "Debian"
+- name: Upgrade packages on Debian-based systems (Ubuntu/Debian)
   ansible.builtin.apt:
+    upgrade: dist
     update_cache: true
-    upgrade: full
-  changed_when: false
+  when: ansible_os_family == "Debian"
   tags:
+    - bootstrap
     - upgrade
 
-- name: Update cache (RedHat)
-  when: ansible_os_family == "RedHat"
+- name: Upgrade packages on RedHat-based systems (AlmaLinux/Rocky/RHEL)
   ansible.builtin.dnf:
-    update_cache: true
+    name: "*"
     state: latest
-  changed_when: false
+    update_cache: true
+  when: ansible_os_family == "RedHat"
   tags:
+    - bootstrap
     - upgrade

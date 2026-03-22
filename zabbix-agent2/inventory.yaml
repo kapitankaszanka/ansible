@@ -2,7 +2,14 @@
 debian:
   hosts:
     debian01.lab:
+      ansible_host: 10.0.50.11
       zabbix_version: "7.4"
+    debian02.lab:
+      ansible_host: 10.0.50.12
+    debian03.lab:
+      ansible_host: 10.0.50.13
+    debian04.lab:
+      ansible_host: 10.0.50.14
 
 ubuntu:
   hosts:
@@ -13,7 +20,7 @@ ubuntu:
 alma:
   hosts:
     alma01.lab:
- 
+      ansible_host: 10.0.51.11
     alma02.lab:
       ansible_host: 10.0.51.12
     alma03.lab:
@@ -27,4 +34,3 @@ debian_like:
   children:
     debian:
     ubuntu:
-    ansible_host: 10.0.51.11

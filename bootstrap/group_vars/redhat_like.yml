@@ -1,6 +1,7 @@
 packages_list_installed:
   - vim
   - ncdu
+  - tmux
   - lsof
   - git
   - htop

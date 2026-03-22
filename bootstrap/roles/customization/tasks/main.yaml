@@ -22,7 +22,7 @@
       - admin_ssh_pub_key is defined
       - admin_ssh_pub_key is not none
 
-  - name: Bashrc and vimrc files (Custom User)
+  - name: Bashrc, tmux and vimrc files (User)
     ansible.builtin.copy:
       dest: "/home/{{ admin_user }}/.{{ item }}"
       src: "{{ item }}"
@@ -32,10 +32,11 @@
     loop:
       - bashrc
       - vimrc
+      - tmux.conf
     tags:
       - customization
 
-  - name: Bashrc and vimrc files (Root user)
+  - name: Bashrc, tmux and vimrc files (Root)
     ansible.builtin.copy:
       dest: "/root/.{{ item }}"
       src: "{{ item }}"
@@ -45,8 +46,10 @@
     loop:
       - bashrc
       - vimrc
+      - tmux.conf
     tags:
       - customization
+
   when:
     - admin_user is defined
     - admin_user is not none

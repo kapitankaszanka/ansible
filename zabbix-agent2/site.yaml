@@ -3,6 +3,7 @@
   hosts: all
   become: true
   roles:
-#    - role: install_zabbix-agent2
+    - role: install
+    - role: configure
     - role: remove_config
 

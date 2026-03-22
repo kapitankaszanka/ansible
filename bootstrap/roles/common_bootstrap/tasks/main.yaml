@@ -5,7 +5,7 @@
   changed_when: false
   tags:
     - bootstrap
-    - cache
+    - update
 
 - name: Update cache (RedHat)
   when: ansible_os_family == "RedHat"
@@ -14,7 +14,7 @@
   changed_when: false
   tags:
     - bootstrap
-    - cache
+    - update
 
 - name: Ensure sudo is installed (Debian)
   when: ansible_os_family == "Debian"
@@ -28,8 +28,8 @@
 - name: Ensure sudo is installed (RedHat)
   when: ansible_os_family == "RedHat"
   ansible.builtin.dnf:
-    state: present
     name: sudo
+    state: present
   tags:
     - bootstrap
     - sudo
@@ -44,7 +44,6 @@
       groups: "{{ superuser_group }}"
     tags:
       - bootstrap
-      - sudo
       - user
 
   - name: SSH key for bootstrap user
@@ -54,7 +53,6 @@
       key: "{{ automation_ssh_pub_key }}"
     tags:
       - bootstrap
-      - sudo
       - user
     when:
       - automation_ssh_pub_key is defined

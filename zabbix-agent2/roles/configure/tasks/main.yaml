@@ -1,0 +1,46 @@
+- name: Check supported family
+  ansible.builtin.fail:
+    msg: "This role supports {{ supported_distros | join(', ') }} families, got {{ ansible_os_family }}"
+  tags:
+    - configure
+  when: ansible_distribution not in supported_distros
+
+- name: Install zabbix-agent2 (Debian)
+  block:
+    - name: Install zabbix-agent2
+      ansible.builtin.apt:
+        name: zabbix-agent2
+        state: present
+  tags:
+    - configure
+  when: 
+    - ansible_os_family == "Debian"
+
+- name: Install zabbix-agent2 (RedHat)
+  block:
+    - name:
+      ansible.builtin.dnf:
+        name: zabbix-agent2
+        state: present
+      tags:
+        - configure
+  when:
+    - ansible_os_family == "RedHat"
+
+- name: Enable zabbix-agent2 service
+  ansible.builtin.service:
+    name: zabbix-agent2
+    enabled: true
+  tags:
+    - configure
+
+- name: Configure zabbix-agent2
+  ansible.builtin.template:
+    src: zabbix_agent2.conf.j2
+    dest: /etc/zabbix/zabbix_agent2.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart zabbix-agent2
+  tags:
+    - configure

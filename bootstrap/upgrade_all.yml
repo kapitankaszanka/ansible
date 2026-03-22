@@ -1,0 +1,5 @@
+- name: Upgrade all Linux machines
+  hosts: all
+  become: true
+  roles:
+    - role: upgrade_all_packages
