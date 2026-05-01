@@ -12,6 +12,8 @@
     loop:
       - /etc/apt/trusted.gpg.d/zabbix-official-repo-apr2024.gpg
       - /etc/apt/sources.list.d/zabbix.list
+  tags:
+    - remove
   when: 
     - ansible_os_family == "Debian"
 
@@ -44,6 +46,8 @@
     ansible.builtin.file:
       path: /etc/yum.repo.d/zabbix.repo
       state: absent
+  tags:
+    - remove
   when: 
     - ansible_os_family == "RedHat"
 
@@ -52,3 +56,5 @@
   ansible.builtin.file:
     path: /etc/zabbix
     state: absent
+  tags:
+    - remove

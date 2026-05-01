@@ -34,6 +34,12 @@
 
 - name: RedHat based distros
   block:
+    - name: Check if EPEL repo file exists
+      ansible.builtin.stat:
+        path: /etc/yum.repos.d/epel.repo
+      register: epel_repo_file
+      tags:
+        - repository
     - name: Exclude Zabbix package from EPEL repo
       ansible.builtin.ini_file:
         path: /etc/yum.repos.d/epel.repo
@@ -42,6 +48,7 @@
         value: zabbix*
         state: present
         backup: yes
+      when: epel_repo_file.stat.exists
       tags:
         - repository
     - name: Add zabbix key (RedHat)
@@ -57,7 +64,7 @@
       ansible.builtin.yum_repository:
         name: zabbix
         description: Zabbix Official Repository - $basearch
-        baseurl: https://repo.zabbix.com/zabbix/{{ zabbix_version }}/{{ redhat_distribution }}/{{ ansible_distribution_major_version }}/x86_64
+        baseurl: https://repo.zabbix.com/zabbix/{{ zabbix_version }}/stable/{{ redhat_distribution }}/{{ ansible_distribution_major_version }}/$basearch/ 
         enabled: true
         gpgcheck: true
         gpgkey: file:///etc/pki/rpm-gpg/{{ redhat_repository_key_name }}

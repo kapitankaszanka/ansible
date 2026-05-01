@@ -5,27 +5,122 @@
     - configure
   when: ansible_distribution not in supported_distros
 
-- name: Install zabbix-agent2 (Debian)
-  block:
-    - name: Install zabbix-agent2
-      ansible.builtin.apt:
-        name: zabbix-agent2
-        state: present
+- name: Check if local certificate exists
+  delegate_to: localhost
+  become: false
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.crt"
+  register: local_cert_stat
   tags:
     - configure
-  when: 
-    - ansible_os_family == "Debian"
+    - pki
 
-- name: Install zabbix-agent2 (RedHat)
+- name: Check if remote certificate exists
+  ansible.builtin.stat:
+    path: /etc/zabbix/pki/agent2.crt
+  register: remote_cert_stat
+  tags:
+    - configure
+    - pki
+
+- name: Determine if PKI update is needed
+  ansible.builtin.set_fact:
+    pki_needs_update: >-
+      {{
+        not local_cert_stat.stat.exists or
+        not remote_cert_stat.stat.exists or
+        (local_cert_stat.stat.checksum != remote_cert_stat.stat.checksum if (local_cert_stat.stat.exists and remote_cert_stat.stat.exists) else false)
+      }}
+  tags:
+    - configure
+    - pki
+
+- name: Local PKI generation tasks
+  delegate_to: localhost
+  become: false
   block:
-    - name:
-      ansible.builtin.dnf:
-        name: zabbix-agent2
-        state: present
-      tags:
-        - configure
-  when:
-    - ansible_os_family == "RedHat"
+    - name: Create local cert directory for the host
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}"
+        state: directory
+        mode: '0700'
+
+    - name: Generate agent private key
+      community.crypto.openssl_privatekey:
+        path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.key"
+        size: 4096
+
+    - name: Generate an OpenSSL Certificate Signing Request (CSR)
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.key"
+        common_name: "{{ inventory_hostname }}.{{ domain_name }}"
+        subject_alt_name:
+          - "DNS:{{ inventory_hostname }}.{{ domain_name }}"
+      register: csr
+
+    - name: Sign the CSR with our encrypted CA
+      community.crypto.x509_certificate_pipe:
+        csr_content: "{{ csr.csr }}"
+        provider: ownca
+        ownca_path: "{{ playbook_dir }}/zabbix-pki/ca/ca.crt"
+        ownca_privatekey_path: "{{ playbook_dir }}/zabbix-pki/ca/ca.key"
+        ownca_privatekey_passphrase: "{{ ca_passphrase }}"
+      register: signed_cert
+
+    - name: Save signed certificate locally
+      ansible.builtin.copy:
+        dest: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.crt"
+        content: "{{ signed_cert.certificate }}"
+        mode: '0644'
+  when: pki_needs_update
+  tags:
+    - configure
+    - pki
+
+- name: Create PKI directory on Zabbix Agent
+  ansible.builtin.file:
+    path: /etc/zabbix/pki
+    state: directory
+    owner: zabbix
+    group: zabbix
+    mode: '0750'
+  tags:
+    - configure
+    - pki
+
+- name: Distribute CA and Agent Certificates to Target Node
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: zabbix
+    group: zabbix
+    mode: "{{ item.mode }}"
+  loop:
+    - src: "{{ playbook_dir }}/zabbix-pki/ca/ca.crt"
+      dest: "/etc/zabbix/pki/ca.crt"
+      mode: "0644"
+    - src: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.crt"
+      dest: "/etc/zabbix/pki/agent2.crt"
+      mode: "0644"
+    - src: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.key"
+      dest: "/etc/zabbix/pki/agent2.key"
+      mode: "0600"
+  notify: Restart zabbix-agent2
+  when: pki_needs_update
+  tags:
+    - configure
+    - pki
+
+- name: Securely delete local private key from Ansible Server
+  delegate_to: localhost
+  become: false
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.key"
+    state: absent
+  when: pki_needs_update
+  tags:
+    - configure
+    - pki
 
 - name: Enable zabbix-agent2 service
   ansible.builtin.service:

@@ -251,7 +251,7 @@ BufferSize={{ zabbix_agent2["buffer"]["size"] }}
 # Default:
 # EnablePersistentBuffer=0
 {% if zabbix_agent2["buffer"]["persisten"]["enable"] is defined %}
-PersistentBufferPeriod={{ zabbix_agent2["buffer"]["persisten"]["enable"] }}
+EnablePersistentBuffer={{ zabbix_agent2["buffer"]["persisten"]["enable"] }}
 {% endif %}
 
 ### Option: PersistentBufferPeriod
@@ -384,7 +384,7 @@ ControlSocket=/run/zabbix/agent.sock
 # Default:
 # TLSConnect=unencrypted
 {% if zabbix_agent2["tls"]["connect"] is defined %}
-BufferSize={{ zabbix_agent2["tls"]["connect"] }}
+TLSConnect={{ zabbix_agent2["tls"]["connect"] }}
 {% endif %}
 
 ### Option: TLSAccept
@@ -397,8 +397,8 @@ BufferSize={{ zabbix_agent2["tls"]["connect"] }}
 # Mandatory: yes, if TLS certificate or PSK parameters are defined (even for 'unencrypted' connection)
 # Default:
 # TLSAccept=unencrypted
-{% if zabbix_agent2["tls"]["connect"] is defined %}
-BufferSize={{ zabbix_agent2["tls"]["connect"] }}
+{% if zabbix_agent2["tls"]["accept"] is defined %}
+TLSAccept={{ zabbix_agent2["tls"]["accept"] }}
 {% endif %}
 
 ### Option: TLSCAFile

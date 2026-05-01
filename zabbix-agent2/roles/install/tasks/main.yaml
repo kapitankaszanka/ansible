@@ -9,21 +9,8 @@
 - name: Debian based distros
   block:
     - name: Install zabbix-agent2
-      ansible.builtin.apt:
+      ansible.builtin.package:
         name: zabbix-agent2
         state: present
   tags:
     - install
-  when: 
-    - ansible_os_family == "Debian"
-
-- name: RedHat based distros
-  block:
-    - name:
-      ansible.builtin.dnf:
-        name: zabbix-agent2
-        state: present
-  tags:
-    - install
-  when:
-    - ansible_os_family == "RedHat"
