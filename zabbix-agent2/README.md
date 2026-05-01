@@ -47,10 +47,14 @@ debian:
     debian-01:
       ansible_host: 10.0.1.2
 
+zabbix_servers:
+    hosts:
+        debian-01:
+
 ```
 
-### 2. Variables (`group_vars/all.yaml`)
-Update the global variables in `group_vars/all.yaml` to match your environment, specifically the Zabbix Server address:
+### 2. Variables (`group_vars/all.yaml` & `host_vars`)
+Update the global variables in `group_vars/all/main.yml` to match your environment, specifically the Zabbix Server address:
 
 ```yaml
 zabbix_agent2:
@@ -59,6 +63,17 @@ zabbix_agent2:
   server_active: zabbix.yourdomain.com
   # ... other configurations
 ```
+
+**Customizing Hostnames (Comma-Separated):**
+By default, the agent hostname will be `{{ inventory_hostname }}-linux`. If you need multiple hostnames (e.g., to link a host to multiple templates/identities in Zabbix), you can define a list of suffixes in `host_vars/<hostname>.yml`:
+
+```yaml
+# Example: host_vars/dns01.yml
+zabbix_agent_suffixes:
+  - linux
+  - docker
+```
+This will result in `Hostname=dns01-linux,dns01-docker` inside the agent configuration.
 
 ### 3. Certificate Authority (CA) & Vault
 This playbook relies on a local CA stored in `zabbix-pki/ca/`. The CA's private key password is encrypted using Ansible Vault and stored in `group_vars/all/vault.yaml`.
@@ -93,12 +108,18 @@ ansible-playbook zabbix-agent2.yaml --ask-vault-pass
 ```
 
 ## Certificate Workflow (Under the Hood)
+The playbook features a decoupled PKI pipeline to support hosts that run both the Zabbix Agent and the Zabbix Server.
+
+**Agent Certificate Pipeline (All Hosts):**
 1. Checks the remote agent for an existing `agent2.crt`.
 2. Compares it against the local copy stored in `zabbix-pki/hosts/<hostname>/agent.crt`.
-3. If missing or mismatched, it generates a new `.key` and `.csr` locally.
+3. If missing or mismatched, it generates a new `agent.key` and `.csr` locally.
 4. Signs the `.csr` with the local CA.
-5. Pushes the `ca.crt`, `agent2.crt`, and `agent2.key` to the target machine (`/etc/zabbix/pki/`).
+5. Pushes `ca.crt`, `agent2.crt`, and `agent2.key` to the target machine (`/etc/zabbix/pki/`).
 6. Permanently deletes the local `agent.key` from the Ansible server for security.
+
+**Server Certificate Pipeline (Only `zabbix_servers` group):**
+Runs alongside the agent pipeline. It repeats the process above but specifically generates, signs, and pushes `server.crt` and `server.key` to `/etc/zabbix/pki/` without overwriting the agent's certificates.
 
 ## Supported tags
 1. `repository` - Manage Zabbix official repositories.

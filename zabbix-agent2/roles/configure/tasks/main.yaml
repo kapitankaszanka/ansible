@@ -5,88 +5,121 @@
     - configure
   when: ansible_distribution not in supported_distros
 
-- name: Check if local certificate exists
+# ==========================================
+# AGENT PKI CHECKS
+# ==========================================
+- name: Check if local agent certificate exists
   delegate_to: localhost
   become: false
   ansible.builtin.stat:
     path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.crt"
-  register: local_cert_stat
-  tags:
-    - configure
-    - pki
+  register: agent_local_cert_stat
+  tags: [configure, pki]
 
-- name: Check if remote certificate exists
+- name: Check if remote agent certificate exists
   ansible.builtin.stat:
     path: /etc/zabbix/pki/agent2.crt
-  register: remote_cert_stat
-  tags:
-    - configure
-    - pki
+  register: agent_remote_cert_stat
+  tags: [configure, pki]
 
-- name: Determine if PKI update is needed
+- name: Determine if Agent PKI update is needed
   ansible.builtin.set_fact:
-    pki_needs_update: >-
+    agent_pki_needs_update: >-
       {{
-        not local_cert_stat.stat.exists or
-        not remote_cert_stat.stat.exists or
-        (local_cert_stat.stat.checksum != remote_cert_stat.stat.checksum if (local_cert_stat.stat.exists and remote_cert_stat.stat.exists) else false)
+        not agent_local_cert_stat.stat.exists or
+        not agent_remote_cert_stat.stat.exists or
+        (agent_local_cert_stat.stat.checksum != agent_remote_cert_stat.stat.checksum if (agent_local_cert_stat.stat.exists and agent_remote_cert_stat.stat.exists) else false)
       }}
-  tags:
-    - configure
-    - pki
+  tags: [configure, pki]
 
-- name: Local PKI generation tasks
+# ==========================================
+# SERVER PKI CHECKS
+# ==========================================
+- name: Check if local server certificate exists
   delegate_to: localhost
   become: false
-  block:
-    - name: Create local cert directory for the host
-      ansible.builtin.file:
-        path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}"
-        state: directory
-        mode: '0700'
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/server.crt"
+  register: server_local_cert_stat
+  when: "'zabbix_servers' in group_names"
+  tags: [configure, pki]
 
-    - name: Generate agent private key
-      community.crypto.openssl_privatekey:
-        path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.key"
-        size: 4096
+- name: Check if remote server certificate exists
+  ansible.builtin.stat:
+    path: /etc/zabbix/pki/server.crt
+  register: server_remote_cert_stat
+  when: "'zabbix_servers' in group_names"
+  tags: [configure, pki]
 
-    - name: Generate an OpenSSL Certificate Signing Request (CSR)
-      community.crypto.openssl_csr_pipe:
-        privatekey_path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.key"
-        common_name: "{{ inventory_hostname }}.{{ domain_name }}"
-        subject_alt_name:
-          - "DNS:{{ inventory_hostname }}.{{ domain_name }}"
-      register: csr
+- name: Determine if Server PKI update is needed
+  ansible.builtin.set_fact:
+    server_pki_needs_update: >-
+      {{
+        not server_local_cert_stat.stat.exists or
+        not server_remote_cert_stat.stat.exists or
+        (server_local_cert_stat.stat.checksum != server_remote_cert_stat.stat.checksum if (server_local_cert_stat.stat.exists and server_remote_cert_stat.stat.exists) else false)
+      }}
+  when: "'zabbix_servers' in group_names"
+  tags: [configure, pki]
 
-    - name: Sign the CSR with our encrypted CA
-      community.crypto.x509_certificate_pipe:
-        csr_content: "{{ csr.csr }}"
-        provider: ownca
-        ownca_path: "{{ playbook_dir }}/zabbix-pki/ca/ca.crt"
-        ownca_privatekey_path: "{{ playbook_dir }}/zabbix-pki/ca/ca.key"
-        ownca_privatekey_passphrase: "{{ ca_passphrase }}"
-      register: signed_cert
+# ==========================================
+# DIRECTORY CREATION
+# ==========================================
+- name: Create local cert directory for the host
+  delegate_to: localhost
+  become: false
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}"
+    state: directory
+    mode: '0700'
+  when: agent_pki_needs_update or (server_pki_needs_update | default(false))
+  tags: [configure, pki]
 
-    - name: Save signed certificate locally
-      ansible.builtin.copy:
-        dest: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.crt"
-        content: "{{ signed_cert.certificate }}"
-        mode: '0644'
-  when: pki_needs_update
-  tags:
-    - configure
-    - pki
-
-- name: Create PKI directory on Zabbix Agent
+- name: Create PKI directory on Target Node
   ansible.builtin.file:
     path: /etc/zabbix/pki
     state: directory
     owner: zabbix
     group: zabbix
     mode: '0750'
-  tags:
-    - configure
-    - pki
+  tags: [configure, pki]
+
+# ==========================================
+# AGENT PKI GENERATION & DISTRIBUTION
+# ==========================================
+- name: Local Agent PKI generation tasks
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Generate agent private key
+      community.crypto.openssl_privatekey:
+        path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.key"
+        size: 4096
+
+    - name: Generate Agent CSR
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.key"
+        common_name: "{{ inventory_hostname }}.{{ domain_name }}"
+        subject_alt_name:
+          - "DNS:{{ inventory_hostname }}.{{ domain_name }}"
+      register: agent_csr
+
+    - name: Sign Agent CSR with CA
+      community.crypto.x509_certificate_pipe:
+        csr_content: "{{ agent_csr.csr }}"
+        provider: ownca
+        ownca_path: "{{ playbook_dir }}/zabbix-pki/ca/ca.crt"
+        ownca_privatekey_path: "{{ playbook_dir }}/zabbix-pki/ca/ca.key"
+        ownca_privatekey_passphrase: "{{ ca_passphrase }}"
+      register: agent_signed_cert
+
+    - name: Save signed agent certificate locally
+      ansible.builtin.copy:
+        dest: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.crt"
+        content: "{{ agent_signed_cert.certificate }}"
+        mode: '0644'
+  when: agent_pki_needs_update
+  tags: [configure, pki]
 
 - name: Distribute CA and Agent Certificates to Target Node
   ansible.builtin.copy:
@@ -106,22 +139,93 @@
       dest: "/etc/zabbix/pki/agent2.key"
       mode: "0600"
   notify: Restart zabbix-agent2
-  when: pki_needs_update
-  tags:
-    - configure
-    - pki
+  when: agent_pki_needs_update
+  tags: [configure, pki]
 
-- name: Securely delete local private key from Ansible Server
+- name: Securely delete local agent private key from Ansible Server
   delegate_to: localhost
   become: false
   ansible.builtin.file:
     path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/agent.key"
     state: absent
-  when: pki_needs_update
-  tags:
-    - configure
-    - pki
+  when: agent_pki_needs_update
+  tags: [configure, pki]
 
+# ==========================================
+# SERVER PKI GENERATION & DISTRIBUTION
+# ==========================================
+- name: Local Server PKI generation tasks
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Generate server private key
+      community.crypto.openssl_privatekey:
+        path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/server.key"
+        size: 4096
+
+    - name: Generate Server CSR
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/server.key"
+        common_name: "{{ inventory_hostname }}.{{ domain_name }}"
+        subject_alt_name:
+          - "DNS:{{ inventory_hostname }}.{{ domain_name }}"
+      register: server_csr
+
+    - name: Sign Server CSR with CA
+      community.crypto.x509_certificate_pipe:
+        csr_content: "{{ server_csr.csr }}"
+        provider: ownca
+        ownca_path: "{{ playbook_dir }}/zabbix-pki/ca/ca.crt"
+        ownca_privatekey_path: "{{ playbook_dir }}/zabbix-pki/ca/ca.key"
+        ownca_privatekey_passphrase: "{{ ca_passphrase }}"
+      register: server_signed_cert
+
+    - name: Save signed server certificate locally
+      ansible.builtin.copy:
+        dest: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/server.crt"
+        content: "{{ server_signed_cert.certificate }}"
+        mode: '0644'
+  when: 
+    - "'zabbix_servers' in group_names"
+    - server_pki_needs_update | default(false)
+  tags: [configure, pki]
+
+- name: Distribute Server Certificates to Target Node
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: zabbix
+    group: zabbix
+    mode: "{{ item.mode }}"
+  loop:
+    - src: "{{ playbook_dir }}/zabbix-pki/ca/ca.crt"
+      dest: "/etc/zabbix/pki/ca.crt"
+      mode: "0644"
+    - src: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/server.crt"
+      dest: "/etc/zabbix/pki/server.crt"
+      mode: "0644"
+    - src: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/server.key"
+      dest: "/etc/zabbix/pki/server.key"
+      mode: "0600"
+  when: 
+    - "'zabbix_servers' in group_names"
+    - server_pki_needs_update | default(false)
+  tags: [configure, pki]
+
+- name: Securely delete local server private key from Ansible Server
+  delegate_to: localhost
+  become: false
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/zabbix-pki/hosts/{{ inventory_hostname }}/server.key"
+    state: absent
+  when: 
+    - "'zabbix_servers' in group_names"
+    - server_pki_needs_update | default(false)
+  tags: [configure, pki]
+
+# ==========================================
+# AGENT CONFIGURATION
+# ==========================================
 - name: Enable zabbix-agent2 service
   ansible.builtin.service:
     name: zabbix-agent2

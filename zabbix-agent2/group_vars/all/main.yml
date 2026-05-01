@@ -5,7 +5,7 @@ zabbix_agent2:
   mandatory:
     server: zabbix.example.pl
   # all lower are optional
-  hostname: "{{ inventory_hostname }}-linux"
+  hostname: "{% set names = [] %}{% for s in zabbix_agent_suffixes | default(['linux']) %}{{ names.append(inventory_hostname ~ '-' ~ s) }}{% endfor %}{{ names | join(',') }}"
   log_type: file
   debug_level: 3
   listen_port: 10050
