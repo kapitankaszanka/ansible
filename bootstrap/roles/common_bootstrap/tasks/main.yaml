@@ -16,18 +16,8 @@
     - bootstrap
     - update
 
-- name: Ensure sudo is installed (Debian)
-  when: ansible_os_family == "Debian"
-  ansible.builtin.apt:
-    name: sudo
-    state: present
-  tags:
-    - bootstrap
-    - sudo
-
-- name: Ensure sudo is installed (RedHat)
-  when: ansible_os_family == "RedHat"
-  ansible.builtin.dnf:
+- name: Ensure sudo is installed
+  ansible.builtin.package:
     name: sudo
     state: present
   tags:
@@ -46,17 +36,17 @@
       - bootstrap
       - user
 
-  - name: SSH key for bootstrap user
+  - name: SSH keys for bootstrap user
     ansible.posix.authorized_key:
       user: "{{ automation_user }}"
       state: present
-      key: "{{ automation_ssh_pub_key }}"
+      key: "{{ automation_ssh_keys | join('\n') }}"
     tags:
       - bootstrap
       - user
     when:
-      - automation_ssh_pub_key is defined
-      - automation_ssh_pub_key is not none
+      - automation_ssh_keys is defined
+      - automation_ssh_keys | length > 0
 
   - name: Ensure /etc/sudoers.d exists
     ansible.builtin.file:

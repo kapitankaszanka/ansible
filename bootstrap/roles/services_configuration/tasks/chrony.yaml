@@ -1,0 +1,46 @@
+- name: Install chrony (Debian)
+  when: ansible_os_family == "Debian"
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+
+- name: Install chrony (RedHat)
+  when: ansible_os_family == "RedHat"
+  ansible.builtin.dnf:
+    name: chrony
+    state: present
+
+- name: Ensure chrony is enabled and running
+  ansible.builtin.service:
+    name: "{{ chrony_service_name }}"
+    state: started
+    enabled: true
+
+- name: Create chrony directories
+  ansible.builtin.file:
+    dest: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - /etc/chrony/conf.d/
+    - /etc/chrony/sources.d/
+
+- name: Configure chrony main config
+  ansible.builtin.template:
+    src: chrony.conf.j2 
+    dest: "{{ chrony_dropin }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony
+
+- name: Configure chrony sources
+  ansible.builtin.template:
+    src: chrony-sources.sources.j2 
+    dest: "{{ chrony_sources_dropin }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony

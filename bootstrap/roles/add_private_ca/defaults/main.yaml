@@ -1,0 +1,2 @@
+root_ca_cert_path: "{{ '/etc/pki/ca-trust/source/anchors/' if ansible_os_family == 'RedHat' else '/usr/local/share/ca-certificates/' }}"
+update_ca_command: "{{ 'update-ca-trust extract' if ansible_os_family == 'RedHat' else 'update-ca-certificates' }}"

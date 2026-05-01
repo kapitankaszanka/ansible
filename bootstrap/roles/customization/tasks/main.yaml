@@ -1,55 +1,54 @@
-- block:
-  - name: Ensure custom user exists with sudo group
-    ansible.builtin.user:
-      name: "{{ admin_user }}"
-      create_home: true
-      shell: /bin/bash
-      groups: "{{ superuser_group }}"
-      append: true
-    tags:
-      - customization
-      - user
+- name: Ensure custom users exist with sudo group
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    create_home: true
+    shell: /bin/bash
+    groups: "{{ superuser_group }}"
+    append: true
+  loop: "{{ admin_users }}"
+  when: admin_users is defined
+  tags:
+    - customization
+    - user
 
-  - name: SSH key for custom user
-    ansible.posix.authorized_key:
-      user: "{{ admin_user }}"
-      state: present
-      key: "{{ admin_ssh_pub_key }}"
-    tags:
-      - customization
-      - user
-    when:
-      - admin_ssh_pub_key is defined
-      - admin_ssh_pub_key is not none
+- name: SSH keys for custom users
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    state: present
+    key: "{{ item.ssh_keys | join('\n') }}"
+  loop: "{{ admin_users }}"
+  when: 
+    - admin_users is defined
+    - item.ssh_keys is defined
+    - item.ssh_keys | length > 0
+  tags:
+    - customization
+    - user
 
-  - name: Bashrc, tmux and vimrc files (User)
-    ansible.builtin.copy:
-      dest: "/home/{{ admin_user }}/.{{ item }}"
-      src: "{{ item }}"
-      owner: "{{ admin_user }}"
-      group: "{{ admin_user }}"
-      mode: "0640"
-    loop:
-      - bashrc
-      - vimrc
-      - tmux.conf
-    tags:
-      - customization
+- name: Bashrc, tmux and vimrc files (User)
+  ansible.builtin.copy:
+    dest: "/home/{{ item.0.name }}/.{{ item.1 }}"
+    src: "{{ item.1 }}"
+    owner: "{{ item.0.name }}"
+    group: "{{ item.0.name }}"
+    mode: "0640"
+  with_nested:
+    - "{{ admin_users }}"
+    - ['bashrc', 'vimrc', 'tmux.conf']
+  when: admin_users is defined
+  tags:
+    - customization
 
-  - name: Bashrc, tmux and vimrc files (Root)
-    ansible.builtin.copy:
-      dest: "/root/.{{ item }}"
-      src: "{{ item }}"
-      owner: root
-      group: root
-      mode: "0640"
-    loop:
-      - bashrc
-      - vimrc
-      - tmux.conf
-    tags:
-      - customization
-
-  when:
-    - admin_user is defined
-    - admin_user is not none
+- name: Bashrc, tmux and vimrc files (Root)
+  ansible.builtin.copy:
+    dest: "/root/.{{ item }}"
+    src: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0640"
+  loop:
+    - bashrc
+    - vimrc
+    - tmux.conf
+  tags:
+    - customization

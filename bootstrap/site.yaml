@@ -6,3 +6,4 @@
     - role: services_configuration
     - role: packages_installation
     - role: customization
+    - role: add_private_ca

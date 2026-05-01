@@ -1,0 +1,12 @@
+- name: Copy root CA to host
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ root_ca_cert_path }}{{ item | basename }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Update CA trust store
+  with_fileglob:
+    - "*.crt"
+  tags:
+    - add_private_ca
