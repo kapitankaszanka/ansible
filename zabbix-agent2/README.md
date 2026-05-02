@@ -33,17 +33,9 @@ Add your target machines to the `inventory.yml` file. Example:
 ```yaml
 ---
 all:
-  vars:
-    ansible_user: your_ssh_user
-    ansible_ssh_private_key_file: /path/to/private/key
-
-almalinux:
   hosts:
     alma-01:
       ansible_host: 10.0.1.1
-
-debian:
-  hosts:
     debian-01:
       ansible_host: 10.0.1.2
 
