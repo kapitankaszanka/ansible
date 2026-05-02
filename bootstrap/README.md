@@ -53,6 +53,20 @@ To upgrade all packages on the target systems:
 ansible-playbook upgrade_all.yaml
 ```
 
+### Available Tags
+You can use `--tags` or `--skip-tags` to run specific parts of the playbooks. The available tags are:
+
+- `bootstrap`: Core setup tasks including user creation and sudoers configuration.
+- `update`: Updates package manager caches (apt/dnf).
+- `sudo`: Configures passwordless sudo and sudoers files.
+- `user`: Manages automation and admin users, including SSH keys.
+- `customization`: Applies user environments and dotfiles (bashrc, vimrc, tmux.conf).
+- `package`: Installs essential base system packages.
+- `dns` / `resolved`: Configures systemd-resolved for DNS management.
+- `ntp` / `chrony`: Configures Chrony for time synchronization.
+- `add_private_ca`: Deploys internal Private CA certificates.
+- `upgrade`: Performs full system package upgrades.
+
 ## Roles Overview
 
 | Role | Description |
