@@ -10,7 +10,7 @@ automation_ssh_keys:
 admin_users:
   - name: "mateusz"
     ssh_keys:
-      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL/hmvh7+/OHR29xa3e8tD2/Nsmi2j2DGndr2mdoTfcF mateusz@Laptop-HP15s"
+      - "ssh-ed25519 YOUR_SECOND_KEY_HERE"
 
 ######
 
