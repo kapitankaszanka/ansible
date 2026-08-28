@@ -18,11 +18,11 @@ dns_servers:
   - 10.1.10.1
   - 10.1.10.2
 domains_name:
-  - kaszankait.pl
+  - your-domain.pl
 resolved_dnssec: no
 
 ntp_servers:
-  - ntp.kaszankait.pl 
+  - ntp.your-domain.pl
 ntp_fallback_servers:
   - tempus1.gum.gov.pl
   - tempus2.gum.gov.pl
