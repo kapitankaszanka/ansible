@@ -1,0 +1,18 @@
+- name: Bootstrap all Linux machines
+  hosts: all
+  become: true
+  pre_tasks:
+    # Puts hosts into debian_like / redhat_like so the matching group_vars
+    # (package lists) load without defining these groups in the inventory.
+    - name: Group hosts by OS family
+      ansible.builtin.group_by:
+        key: "{{ 'redhat_like' if ansible_os_family == 'RedHat' else 'debian_like' }}"
+      changed_when: false
+      tags:
+        - always
+  roles:
+    - role: common_bootstrap
+    - role: services_configuration
+    - role: packages_installation
+    - role: customization
+    - role: add_private_ca

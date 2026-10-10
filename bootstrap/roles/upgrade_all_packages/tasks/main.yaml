@@ -1,0 +1,18 @@
+- name: Upgrade packages on Debian-based systems (Ubuntu/Debian)
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: true
+  when: ansible_os_family == "Debian"
+  tags:
+    - bootstrap
+    - upgrade
+
+- name: Upgrade packages on RedHat-based systems (AlmaLinux/Rocky/RHEL)
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_cache: true
+  when: ansible_os_family == "RedHat"
+  tags:
+    - bootstrap
+    - upgrade

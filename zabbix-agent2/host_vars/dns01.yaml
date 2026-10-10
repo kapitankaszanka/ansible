@@ -1,0 +1,4 @@
+---
+zabbix_agent_suffixes:
+  - linux
+  - docker

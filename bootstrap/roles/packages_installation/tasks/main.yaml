@@ -1,0 +1,20 @@
+- name: Ensure EPEL repo is installed (RedHat)
+  when:
+    - ansible_os_family == "RedHat"
+    - packages_list_installed | length > 0
+  ansible.builtin.package:
+    name: epel-release
+    state: present
+  tags:
+    - package
+
+- name: Install base packages
+  when:
+    - packages_list_installed is defined
+    - packages_list_installed is not none
+    - packages_list_installed | length > 0
+  ansible.builtin.package:
+    name: "{{ packages_list_installed }}"
+    state: present
+  tags:
+    - package

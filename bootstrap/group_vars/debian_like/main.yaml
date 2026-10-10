@@ -1,0 +1,18 @@
+packages_list_installed:
+  - vim-gtk3
+  - tmux
+  - ncdu
+  - lsof
+  - git
+  - htop
+  - curl
+  - man-db
+  - bash-completion
+  - tree
+  - apt-listchanges
+  - apt-transport-https
+  - apparmor
+  - apparmor-profiles
+  - apparmor-profiles-extra
+  - apparmor-utils
+  - apparmor-easyprof

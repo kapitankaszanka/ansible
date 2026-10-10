@@ -1,0 +1,28 @@
+---
+# A user who will be created for the needs of Ansible
+automation_user: "ansible"
+# Explicit list of SSH keys for the automation user
+automation_ssh_keys:
+  - "ssh-ed25519 YOUR_SECOND_KEY_HERE"
+
+######
+
+admin_users:
+  - name: "admin"
+    ssh_keys:
+      - "ssh-ed25519 YOUR_SECOND_KEY_HERE"
+
+######
+
+dns_servers:
+  - 10.1.10.1
+  - 10.1.10.2
+domains_name:
+  - your-domain.pl
+resolved_dnssec: no
+
+ntp_servers:
+  - ntp.your-domain.pl
+ntp_fallback_servers:
+  - tempus1.gum.gov.pl
+  - tempus2.gum.gov.pl

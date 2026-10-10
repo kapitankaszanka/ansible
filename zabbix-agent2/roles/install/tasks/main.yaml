@@ -1,0 +1,16 @@
+- name: Check supported distribution
+  ansible.builtin.fail:
+    msg: "This role supports {{ supported_distros | join(', ') }} distributions, got {{ ansible_distribution }}"
+  tags:
+    - install
+  when: 
+    - ansible_distribution not in supported_distros
+
+- name: Debian based distros
+  block:
+    - name: Install zabbix-agent2
+      ansible.builtin.package:
+        name: zabbix-agent2
+        state: present
+  tags:
+    - install

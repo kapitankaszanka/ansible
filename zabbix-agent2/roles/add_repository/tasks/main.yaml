@@ -1,0 +1,74 @@
+- name: Check supported distribution
+  ansible.builtin.fail:
+    msg: "This role supports {{ supported_distros | join(', ') }} distributions, got {{ ansible_distribution }}"
+  tags:
+    - repository
+  when: ansible_distribution not in supported_distros
+
+- name: Debian based distros
+  block:
+    - name: Add repo (Debian)
+      block:
+        - name: Install gpg utils (Debian)
+          ansible.builtin.apt:
+            name: gpg
+            state: present
+        - name: Add zabbix repository gpg key for APT distro
+          ansible.builtin.get_url:
+            url: "{{ debian_repository_key }}"
+            dest: /etc/apt/trusted.gpg.d/
+            owner: root
+            group: root
+            mode: "0644"
+        - name: Add zabbix repository for APT distro
+          ansible.builtin.apt_repository:
+            repo: "{{ debian_repository }}"
+            filename: zabbix
+            state: present
+      when:
+        - zabbix_version > 7.0
+  tags:
+    - repository
+  when: 
+    - ansible_os_family == "Debian"
+
+- name: RedHat based distros
+  block:
+    - name: Check if EPEL repo file exists
+      ansible.builtin.stat:
+        path: /etc/yum.repos.d/epel.repo
+      register: epel_repo_file
+      tags:
+        - repository
+    - name: Exclude Zabbix package from EPEL repo
+      ansible.builtin.ini_file:
+        path: /etc/yum.repos.d/epel.repo
+        section: epel
+        option: excludepkgs
+        value: zabbix*
+        state: present
+        backup: yes
+      when: epel_repo_file.stat.exists
+      tags:
+        - repository
+    - name: Add zabbix key (RedHat)
+      ansible.builtin.get_url:
+        url: "{{ redhat_repository_key }}"
+        dest: "/etc/pki/rpm-gpg/{{ redhat_repository_key_name }}"
+        owner: root
+        group: root
+        mode: "0644"
+      tags:
+        - repository
+    - name: Add zabbix repository (RedHat)
+      ansible.builtin.yum_repository:
+        name: zabbix
+        description: Zabbix Official Repository - $basearch
+        baseurl: https://repo.zabbix.com/zabbix/{{ zabbix_version }}/stable/{{ redhat_distribution }}/{{ ansible_distribution_major_version }}/$basearch/ 
+        enabled: true
+        gpgcheck: true
+        gpgkey: file:///etc/pki/rpm-gpg/{{ redhat_repository_key_name }}
+      tags:
+        - repository
+  when:
+    - ansible_os_family == "RedHat"

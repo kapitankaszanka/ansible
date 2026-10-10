@@ -1,0 +1,15 @@
+packages_list_installed:
+  - vim
+  - ncdu
+  - tmux
+  - lsof
+  - git
+  - htop
+  - curl
+  - man-db
+  - bash-completion
+  - tree
+  - selinux-policy-devel
+  - setools-console
+  - policycoreutils-devel
+  - policycoreutils-python-utils

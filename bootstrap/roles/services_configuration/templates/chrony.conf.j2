@@ -1,0 +1,28 @@
+{% set driftfile = '/var/lib/chrony/drift' if ansible_os_family == 'RedHat' else '/var/lib/chrony/chrony.drift' %}
+{% set keyfile   = '/etc/chrony.keys' if ansible_os_family == 'RedHat' else '/etc/chrony/chrony.keys' %}
+
+# {{ ansible_distribution }} chrony managed by Ansible
+#
+# Default pools, leved for fallback
+pool 2.pool.ntp.org iburst maxsources 2
+
+# Custom sources servers
+sourcedir /etc/chrony/sources.d
+
+# Auth keys
+keyfile {{ keyfile }}
+
+# Drift & state
+driftfile {{ driftfile }}
+ntsdumpdir /var/lib/chrony
+
+#log tracking measurements statistics
+logdir /var/log/chrony
+
+# Stability & clock behavior
+maxupdateskew 100.0
+rtcsync
+makestep 1 3
+
+# Bring in modular config (Ansible-managed)
+confdir /etc/chrony/conf.d

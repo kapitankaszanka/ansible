@@ -1,0 +1,30 @@
+- block:
+    - name: Fail if unsupported OS family
+      when: ansible_os_family not in ['Debian', 'RedHat']
+      ansible.builtin.fail:
+        msg: "This role supports Debian and RedHat families, got {{ ansible_os_family }}"
+
+    - name: Include DNS configuration (systemd-resolved)
+      ansible.builtin.include_tasks:
+        file: systemd_resolved.yaml
+        apply:
+          tags:
+            - dns
+            - resolved
+      when: ansible_os_family == "Debian"
+      tags:
+        - dns
+        - resolved
+
+    - name: Include NTP configuration (chrony)
+      ansible.builtin.include_tasks:
+        file: chrony.yaml
+        apply:
+          tags:
+            - ntp
+            - chrony
+      tags:
+        - ntp
+        - chrony
+
+  when: not_container | bool

@@ -1,0 +1,4 @@
+### Ansible ###
+*.retry
+zabbix-pki/*
+group_vars/all/vault.yaml

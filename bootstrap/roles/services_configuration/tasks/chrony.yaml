@@ -1,0 +1,39 @@
+- name: Install chrony
+  ansible.builtin.package:
+    name: chrony
+    state: present
+
+- name: Ensure chrony is enabled and running
+  ansible.builtin.service:
+    name: "{{ chrony_service_name }}"
+    state: started
+    enabled: true
+
+- name: Create chrony directories
+  ansible.builtin.file:
+    dest: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ chrony_conf_file }}"
+    - "{{ chrony_sources_file }}"
+
+- name: Configure chrony main config
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: "{{ chrony_dropin }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony
+
+- name: Configure chrony sources
+  ansible.builtin.template:
+    src: chrony-sources.sources.j2
+    dest: "{{ chrony_sources_dropin }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony

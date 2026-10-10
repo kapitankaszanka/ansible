@@ -1,0 +1,54 @@
+- name: Ensure custom users exist with sudo group
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    create_home: true
+    shell: /bin/bash
+    groups: "{{ superuser_group }}"
+    append: true
+  loop: "{{ admin_users }}"
+  when: admin_users is defined
+  tags:
+    - customization
+    - user
+
+- name: SSH keys for custom users
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    state: present
+    key: "{{ item.ssh_keys | join('\n') }}"
+  loop: "{{ admin_users }}"
+  when: 
+    - admin_users is defined
+    - item.ssh_keys is defined
+    - item.ssh_keys | length > 0
+  tags:
+    - customization
+    - user
+
+- name: Bashrc, tmux and vimrc files (User)
+  ansible.builtin.copy:
+    dest: "/home/{{ item.0.name }}/.{{ item.1 }}"
+    src: "{{ item.1 }}"
+    owner: "{{ item.0.name }}"
+    group: "{{ item.0.name }}"
+    mode: "0640"
+  with_nested:
+    - "{{ admin_users }}"
+    - ['bashrc', 'vimrc', 'tmux.conf']
+  when: admin_users is defined
+  tags:
+    - customization
+
+- name: Bashrc, tmux and vimrc files (Root)
+  ansible.builtin.copy:
+    dest: "/root/.{{ item }}"
+    src: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0640"
+  loop:
+    - bashrc
+    - vimrc
+    - tmux.conf
+  tags:
+    - customization

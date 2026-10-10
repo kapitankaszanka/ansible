@@ -1,0 +1,5 @@
+---
+# Copy to vault.yaml and encrypt it:
+#   ansible-vault create group_vars/all/vault.yaml
+# Passphrase of the CA private key in zabbix-pki/ca/ca.key
+ca_passphrase: "your_chosen_passphrase"

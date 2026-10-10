@@ -1,0 +1,22 @@
+- name: Ensure systemd-resolved is enabled and running
+  ansible.builtin.service:
+    name: systemd-resolved
+    state: started
+    enabled: true
+
+- name: Create resolved.d directory
+  ansible.builtin.file:
+    dest: /etc/systemd/resolved.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure systemd-resolved
+  ansible.builtin.template:
+    src: systemd-resolved.conf.j2
+    dest: "{{ resolved_dropin }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart systemd-resolved

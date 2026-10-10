@@ -1,0 +1,25 @@
+domain_name: example.pl
+zabbix_version: 7.4
+
+zabbix_agent2:
+  mandatory:
+    server: zabbix.example.pl
+  # all lower are optional
+  hostname: "{% set names = [] %}{% for s in zabbix_agent_suffixes | default(['linux']) %}{{ names.append(inventory_hostname ~ '-' ~ s) }}{% endfor %}{{ names | join(',') }}"
+  log_type: file
+  debug_level: 3
+  listen_port: 10050
+  listen_ip: 0.0.0.0
+  server_active: zabbix.example.pl
+  buffer:
+    size: 1024
+    persistent:
+      enable: 1
+      period: 1h
+      file: /tmp/zabbix-agent2.sql
+  tls:
+    connect: cert
+    accept: cert
+    ca_path: /etc/zabbix/pki/ca.crt
+    cert_file: /etc/zabbix/pki/agent2.crt
+    key_file: /etc/zabbix/pki/agent2.key
